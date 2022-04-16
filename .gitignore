@@ -5,3 +5,17 @@
 /remote/remote.pdf
 
 /remote/#auto_saved_files#
+
+/code/*.bin
+/code/*.ASM
+/code/*.CV
+/code/*.DBG
+/code/*.list
+/code/*.OBJ
+/code/*.opt
+/code/*.MEM
+/code/.vscode
+/code/*.MTP
+/code/*.TSK
+/code/*.MAP
+/code/*.LST
