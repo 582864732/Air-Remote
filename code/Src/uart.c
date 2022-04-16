@@ -4,7 +4,7 @@
 #include"AT_CMD.h"
 
 uint8 internet_data[6];
-uint8 internet_length = 6;
+uint8 internet_length = 3;
 uint8 internet_cmd;
 
 //只使用UART0作为串口，更改寄存器改变配置
@@ -112,6 +112,8 @@ extern uint8 rx_data[128];
 extern uint8 counter;
 extern uint8 function_receive_flag;
 extern uint8 receive_flag;
+extern uint8 tx_data[4];
+extern uint8 esp_rx_flag;
 
 
 void __attribute((interrupt(0x3c))) UART_Receive(void)
@@ -129,19 +131,21 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 		}else{
 			while(_rxif0==0);
 			temp = _txr_rxr0;
+			led2_toggle();
 			if(function_receive_flag==0){
 				switch (sw_mode){
 				case 0:
 					if(temp==0xAA) {
+						led1_toggle();
 						sw_mode=1;
-						receive_flag = 1;
+						receive_flag=1;
 					}
 					break;
 				case 1:
 					if(temp==0xBB) sw_mode=2;
 					else {
 						sw_mode=0;
-						receive_flag = 0;
+						receive_flag=0;
 					}
 					break;
 				case 2:
@@ -150,18 +154,17 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 					}
 					else {
 						sw_mode=0;
-						receive_flag = 0;
+						receive_flag=0;
 					}
 					break;
 				case 3:
-					internet_data[counter] = temp;
+					tx_data[counter] = temp;
 					counter++;
 					if(counter==internet_length){
-						
+						tx_data[3] = ~tx_data[2];
 						receive_flag=0;
+						esp_rx_flag = 1;
 						sw_mode = 0;
-						internet_length = 0;
-						internet_cmd = 0;
 						counter=0;
 					}
 					break;

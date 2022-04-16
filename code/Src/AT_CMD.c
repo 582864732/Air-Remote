@@ -162,9 +162,7 @@ uint8 ESP_Send(uint8*data,uint8 length){
 	AT_END();
 	AT_Receive(500);
 	uint8 i = 0;
-	// oled_show_string(0,0,rx_data,0);
-	// oled_show_char(0,8,rx_data,0);
-	// uint8 str[20] = "AT+CIPSEND=";
+
 	while(ESP_Compare("+CIPSTATUS:",&i)==OK){
 		AT_SEND("AT+CIPSEND=");
 		// i++;
@@ -174,12 +172,16 @@ uint8 ESP_Send(uint8*data,uint8 length){
 		AT_SEND(toString(length+3));
 		AT_END();
 		delay_ms(1);
-		// UART_SendString("hello");
 		UART_SendByte(tx_header[0]);
 		UART_SendByte(tx_header[1]);
 		UART_SendByte(tx_header[2]);
-		UART_SendString(data);
-		// i=i+length;
+		// UART_SendStringL(data,length);
+		uint8 n=0;
+		for(;n<length;n++){
+			UART_SendByte(data[n]);
+
+		}
+
 	}
 }
 

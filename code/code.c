@@ -23,16 +23,8 @@ void TimInit(void);
 
 uint16 RecCnt = 0;
 
-RecDataBuf[4];
-uint8 RecBuf = 0;
-uint8 CurrentBuf = 0;
+uint8 RecDataBuf[4];
 // uint8 rx_data[128];
-
-#define RISING_EDGE 0x10
-#define FALLING_EDGE 0x20
-#define SET_RISEING_EDGE() 	_integ&=~0x30;_integ|=0x10
-#define SET_FALLING_EDGE() 	_integ&=~0x30;_integ|=0x20
-#define GET_EDGE() (_integ&0x30) 
 
 #define APPROXIMATE(value,low,high) approxiate(value,low,high)
 
@@ -44,10 +36,20 @@ inline uint8 approxiate(uint8 value,uint8 low,uint8 high)
 uint8 RecFlag = 0;
 uint8 TraFlag = 0;
 uint8 tx_data[4] = {0xb2,~0xb2,0x1F,~0x1F};
-
+uint8 esp_rx_flag = 0;
 
 uint8 cnts[100];
 uint16 c = 0;
+
+void InferredTransmit(void){
+	_int2e = 0;
+	_ur0e = 0;
+	_pt3on=1;
+	while(_pt3on);
+	_int2e = 1;
+	_ur0e = 1;
+}
+
 void main()
 {
 	SysTickInit();
@@ -57,53 +59,28 @@ void main()
 	GPIO_Init();
 	IIC_Init();
 	// oled_init();
-	// ESP_Init();
+	ESP_Init();
 	TimInit();
-	uint8 i=0;
-	// _pf0 = 0;
-	// _pt2on=1;
-	// EEPROM_WriteBytes(0,"hell",4);
-	// EEPROM_WriteByte(0x00,'H');
-	// uint8 data;
-	// // _eed='i';
-	// //  = EEPROM_ReadBytes(0);
-	// uint16 i=0;
-	// for(;i<7;i++){
-	// 	data = EEPROM_ReadByte(i);
-	// 	// oled_show_char(0,i,data)
-	// 	oled_show_string(32,i,toString(_eeal),0);
-	// 	oled_show_string(0,i,toString(data),0);
-	// }
-	// oled_show_char(0,0,data);
 
-	uint16 n = 0;
 	while(1){
-		// UART_SendString(toString(100));
-		// UART_SendString("hello\n");
 		if(RecFlag==1){
-			// ESP_Send(RecDataBuf[RecBuf],6);
+			ESP_Send(RecDataBuf,3);
 			// UART_SendByte('\n');
-			uint8 i=0;
-			for(;i<4;i++){
-				UART_SendByte('\n');
-				UART_SendString(toString(RecDataBuf[i]));
-			}
-			UART_SendByte('\n');
-
-			c=0;
+			// uint8 i=0;
+			// for(;i<4;i++){
+			// 	UART_SendByte('\n');
+			// 	UART_SendString(toString(RecDataBuf[i]));
+			// }
+			// UART_SendByte('\n');
 			_int2e=1;
 			RecFlag=0;
 		}
-		// n++;
-		// if(n==290) n=0;
-		// _ptm3al = n&0xFF;
-		// _ptm3ah = n>>8;
-		// delay_ms(100);
-		
-		// _pt3on = 0;
-		// _pt3on=1;
-		// while(_pt3on);
-		// delay_ms(1000);
+		if(esp_rx_flag==1){
+			InferredTransmit();
+			esp_rx_flag=0;
+		}
+		InferredTransmit();
+		delay_ms(1000);
 	}
 }
 
@@ -137,7 +114,6 @@ void TimInit(void)
 	_ptm3pf = 0;
 	_ptm3pe = 1;
 	_pt3on = 0;
-
 }
 
 void SysTickInit(void)
@@ -272,7 +248,6 @@ uint8 packData(uint8 *cnt)
 			}
 			break;
 		case 1:
-			// led2_toggle();
 			if(*cnt==lead_bit){
 				switch_mode = 2;
 				*cnt = 0;
@@ -296,18 +271,6 @@ uint8 packData(uint8 *cnt)
 				}
 			}
 			break;
-		// case 4:
-		// 	if(*cnt==lead_bit){
-		// 		*cnt=0;
-		// 		switch_mode=5;
-		// 	}
-		// 	break;
-		// case 5:
-		// 	if(*cnt == stop_code){
-		// 		*cnt = 0;
-		// 		switch_mode = 0;
-		// 		return FINISH;
-		// 	}
 	} 
 	return OK;
 }  
@@ -323,16 +286,7 @@ void __attribute((interrupt(0x20))) PTM2_Interrupt(void)
 		else _pa1 = 0;
 		if(last_state!=_pa4){
 			cnts[c++] = RecCnt;
-			uint8 state = unpackData(RecCnt);
-			switch(state){
-				// case OK:
-				// 	// led2_on();
-				// 	// _pt2on = 0;
-				// 	// _int2e = 1;
-				// 	_ptm2pf = 0;
-				// 	RecCnt = 0;
-				// 	return;
-				case FINISH:
+			if(unpackData(RecCnt)==FINISH){
 					_pt2on = 0;
 					// _int2e = 1;
 					RecCnt = 0;
@@ -344,7 +298,7 @@ void __attribute((interrupt(0x20))) PTM2_Interrupt(void)
 			last_state = _pa4;
 			RecCnt = 0;
 		}
-		if(RecCnt>500){
+		if(RecCnt>300){
 			_pt2on = 0;
 			RecCnt = 0;
 			// RecFlag = 1;
@@ -365,7 +319,6 @@ void __attribute((interrupt(0x38))) PTM3_Interrupt(void)
 			_pt3on = 0;
 			tx_cnt = 0;
 			state = 0;
-			led1_toggle();
 			return ;
 		}
 		if(tx_cnt==0) state^=1;
@@ -374,7 +327,6 @@ void __attribute((interrupt(0x38))) PTM3_Interrupt(void)
 		}
 		else{
 			 _pa1 = 0;
-			led2_toggle();
 		}
 		_ptm3pf = 0;
 	}
