@@ -17,5 +17,7 @@ void UART_SendString(uint8 *string);
 void UART_SendNum(uint32 num);
 void UART_SendStrings(uint8 **strs,uint8 length);
 
+void controllerSend(uint8 data[3]);
+
 void __attribute((interrupt(0x3c))) UART_Receive(void);
 #endif

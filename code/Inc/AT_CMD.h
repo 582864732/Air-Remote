@@ -40,6 +40,7 @@ uint8 ESP_Disconnect(void);
 uint8 ESP_SetupServer(void);
 uint8 ESP_ConnectServer(void);
 uint8 ESP_Send(uint8*data,uint8 length);
+uint8 ESP_OK(void);
 
 uint8 AT_Receive(uint16 wait);
 uint8 AT_ReceiveOnce(uint16 wait);

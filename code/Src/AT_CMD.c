@@ -185,6 +185,15 @@ uint8 ESP_Send(uint8*data,uint8 length){
 	}
 }
 
+uint8 ESP_OK(void)
+{
+	AT_SEND("AT");
+	AT_END();
+	AT_Receive(100);
+	uint8 i=0;
+	return ESP_Compare("OK",&i);
+}
+
 uint8 ESP_Compare(uint8* str,uint8 *offset){
 	uint8 i=0;
 	uint8 len = strlen(str);

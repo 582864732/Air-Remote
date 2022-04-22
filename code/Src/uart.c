@@ -61,6 +61,37 @@ void UART_Init(void)
 	_ur0f = 0;
 	_ur0e = 1;
 	_emi = 1;
+
+	_pgs0 = 0x0F;
+	_rx2ps = 1;
+
+	_u2cr1 = 0b10000000;
+	_u2cr2 = 0b11001100;
+
+	_brg2 = 17;
+
+	_uarten2 = 1;
+	_txen2 = 1;
+	_rxen2 = 1;
+
+	_ur2f = 0;
+	_ur2e = 1;
+}
+
+void UART2_SendByte(uint8 byte)
+{
+	_ur2e = 0;
+	while(_txif2==0);
+	_txr_rxr2 = byte;
+	_ur2e = 1;
+}
+
+void controllerSend(uint8 data[3]){
+	UART2_SendByte(0xA1);
+	UART2_SendByte(0xF1);
+	UART2_SendByte(data[0]);
+	UART2_SendByte(data[1]);
+	UART2_SendByte(data[2]);
 }
 
 void UART_SendByte(uint8 byte)
@@ -114,7 +145,9 @@ extern uint8 function_receive_flag;
 extern uint8 receive_flag;
 extern uint8 tx_data[4];
 extern uint8 esp_rx_flag;
-
+extern uint8 controller_data[3];
+extern uint8 controller_rx_flag;
+uint8 controller_counter = 0;
 
 void __attribute((interrupt(0x3c))) UART_Receive(void)
 {
@@ -161,7 +194,7 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 					tx_data[counter] = temp;
 					counter++;
 					if(counter==internet_length){
-						tx_data[3] = ~tx_data[2];
+						// tx_data[3] = ~tx_data[2];
 						receive_flag=0;
 						esp_rx_flag = 1;
 						sw_mode = 0;
@@ -187,4 +220,30 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 		}
 		_ur0f=0;
 	}
+	else if(_ur2f == 1){
+		if(_perr2==1||_oerr2==1||_nf2==1||_ferr2==1)
+		{
+			asm("lmov a,___txr_rxr2");	//read RXR0 register to clear RXIF0 bit
+		}else{
+			led2_toggle();
+			while(_rxif2==0);
+			if(controller_counter==0){
+				_pt2on = 1;
+			}
+			controller_data[controller_counter++] = _txr_rxr2;
+			if(controller_counter==3){
+				controller_counter = 0;
+				controller_rx_flag = 1;
+				_pt2on=0;
+			}
+		}
+		_ur2f=0;
+	}
+}
+
+void __attribute((interrupt(0x20))) PTM2_Receive(void)
+{
+	controller_counter=0;
+	_ptm2pf=0;
+	_pt2on = 0;
 }
