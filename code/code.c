@@ -10,7 +10,7 @@
 #include"gpio.h"
 
 typedef struct{
-	uint8 wind_velocity;
+	uint8 windspeed;
 	uint8 tem;
 	uint8 mode;
 	uint8 on;
@@ -18,7 +18,7 @@ typedef struct{
 
 ControllerStruct Controller;
 
-uint8 controller_data[3];
+uint8 controller_data[3] = {0x0B,0x00,0x00};
 uint8 controller_rx_flag = 0;
 // uint8 controller_counter = 0;
 
@@ -49,18 +49,19 @@ void main()
 
 	UART_Init();
 	GPIO_Init();
-	// IIC_Init();
-	// oled_init();
 	ESP_Init();
 	TimInit();
 
 	while(1){
 		if(esp_rx_flag==1){
-			controllerSend(tx_data);
+			if(tx_data[0]!=0xA0){
+				controllerSend(tx_data);
+				memcpy(controller_data,tx_data,3);
+			}
+			ESP_Send(controller_data,3);
 			esp_rx_flag=0;
 		}
 		if(controller_rx_flag==1){
-			led1_toggle();
 			delay_ms(50);
 			controllerSend(controller_data);
 			ESP_Send(controller_data,3);
@@ -87,31 +88,6 @@ void TimInit(void)
 
 	_pt2on = 0;
 	
-
-	// _ptm3c0 = 0b00010000;
-	// _ptm3c1 = 0b11000000;
-
-	// comparator_p = 145;
-	// _ptm3rpl = comparator_p&0xFF;
-	// _ptm3rph = comparator_p>>8;
-
-	// _mf4f = 0;
-	// _mf4e = 1;
-	// _ptm3pf = 0;
-	// _ptm3pe = 1;
-	// _pt3on = 0;
-
-	// _stm0c0 = 0b00010000;
-	// _stm0c1 = 0b10101000;
-
-	// comparator_p = 1786;
-	// _ptm3rpl = comparator_p&0xFF;
-	// _ptm3rph = comparator_p>>8;
-
-	// _mf0f = 0;
-	// _mf0e = 1;
-	// _stm0pf = 0;
-	// _stm0pe = 1;
 }
 
 void SysTickInit(void)

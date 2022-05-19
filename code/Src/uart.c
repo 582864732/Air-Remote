@@ -164,24 +164,17 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 		}else{
 			while(_rxif0==0);
 			temp = _txr_rxr0;
-			led2_toggle();
 			if(function_receive_flag==0){
+				led2_toggle();
+				static uint8 r[50];
+				static c = 0;
+				r[c++] = temp;
+				if(c==30){
+					led1_toggle();
+					c=0;
+				}
 				switch (sw_mode){
 				case 0:
-					if(temp==0xAA) {
-						led1_toggle();
-						sw_mode=1;
-						receive_flag=1;
-					}
-					break;
-				case 1:
-					if(temp==0xBB) sw_mode=2;
-					else {
-						sw_mode=0;
-						receive_flag=0;
-					}
-					break;
-				case 2:
 					if(temp==0xCC){
 						sw_mode=3;
 					}
@@ -225,7 +218,6 @@ void __attribute((interrupt(0x3c))) UART_Receive(void)
 		{
 			asm("lmov a,___txr_rxr2");	//read RXR0 register to clear RXIF0 bit
 		}else{
-			led2_toggle();
 			while(_rxif2==0);
 			if(controller_counter==0){
 				_pt2on = 1;

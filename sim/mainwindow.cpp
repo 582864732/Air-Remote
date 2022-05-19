@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget *parent) :
     timer = new QTimer;
 
     serial_port = new QSerialPort;
-    serial_port->setPortName("COM3");//选取串口
+    serial_port->setPortName("COM4");//选取串口
     serial_port->open(QIODevice::ReadWrite);             //打开串口
     serial_port->setBaudRate(9600);
     //qDebug() << ui.BaudRate->currentText().toInt() << endl;

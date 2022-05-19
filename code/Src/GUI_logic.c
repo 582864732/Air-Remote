@@ -8,9 +8,6 @@ extern ESP_StateStruct ESP_State;
 extern uint8 AT_Command;
 extern WindowStructure *CurrentWindow;
 
-//controller form
-WindowStructure ControllerWindow;
-
 //main form
 WindowStructure MainSettingWindow;
 
@@ -27,6 +24,8 @@ ButtonStructure ConnectOrDisconnectButton;
 #define setPTM3P(value) _ptm3rpl = value&0xFF;_ptm3rph=(value>>8);
 
 uint8 connecting_flag = 0;
+
+
 
 void mainSettingFormInit(void)
 {
@@ -129,11 +128,7 @@ void ButtonCallFunction(ButtonStructure *button)
 
 void WindowCallback(uint8 event)
 {
-	if(CurrentWindow == &WIFI_SettingWindow){
-        if(event==BACK){
-            CurrentWindow = &MainSettingWindow;
-        }
-    }
+
 }
 
 void CustomizedLayerCallFunction(CustomizedLayerStructure *cl)
@@ -148,8 +143,8 @@ inline void GUI_Init(void)
 	CurrentWindow->CL_List = NULL;
 	CurrentWindow->CurrentButton = NULL;
 
-	setCurrentWindow(&MainSettingWindow);
+	// setCurrentWindow(&ControllerWindow);
 	mainSettingFormInit();
 	WIFI_SettingFormInit();
-    // connectingFormInit();
+    // controllerFormInit();
 }
